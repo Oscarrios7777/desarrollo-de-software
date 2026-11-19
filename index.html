@@ -461,7 +461,7 @@ git log --oneline             <span class="c"># revisar el historial</span></pre
 >
   💬 Consultar
 </button>
-  <script>
+ <script>
   const botPanel = document.getElementById("botPanel");
   const botLauncher = document.getElementById("botLauncher");
   const botClose = document.getElementById("botClose");
@@ -469,92 +469,80 @@ git log --oneline             <span class="c"># revisar el historial</span></pre
   const botForm = document.getElementById("botForm");
   const botInput = document.getElementById("botInput");
 
-  function normalizar(texto) {
-    return texto
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[¿?¡!.,;:]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
+  // Pega aquí tu clave del Bloc de notas (solo para pruebas locales)
+  const API_KEY = "PEGA_AQUI_TU_API_KEY";
+  const MODELO = "gemini-2.5-flash";
 
-  function obtenerRespuesta(pregunta) {
-    const texto = normalizar(pregunta);
+  const SYSTEM_INSTRUCTION =
+    "Eres el Asistente de Desarrollo de Software de una página académica. " +
+    "Responde en español, de forma clara, directa y con ejemplos prácticos, " +
+    "enfocado en arquitectura y diseño de software, lenguajes, paradigmas y Git/GitHub.";
 
-    if (
-      texto.includes("microservicio") ||
-      texto.includes("arquitectura") ||
-      texto.includes("monolitica") ||
-      texto.includes("cliente servidor") ||
-      texto.includes("arquitectura en capas") ||
-      texto.includes("mvc")
-    ) {
-      return "La arquitectura de software define cómo se organiza un sistema, cuáles son sus componentes y cómo se comunican. Algunos estilos son el monolítico, cliente-servidor, capas, microservicios y orientado a eventos. La elección influye en la escalabilidad y el mantenimiento.";
+  async function obtenerRespuestaIA(pregunta) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent?key=${encodeURIComponent(API_KEY)}`;
+
+    const respuesta = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: SYSTEM_INSTRUCTION }]
+        },
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: pregunta }]
+          }
+        ]
+      })
+    });
+
+    if (!respuesta.ok) {
+      throw new Error(`Error HTTP ${respuesta.status}`);
     }
 
-    if (
-      texto.includes("paradigma") ||
-      texto.includes("funcional") ||
-      texto.includes("imperativo") ||
-      texto.includes("declarativo") ||
-      texto.includes("orientado a objetos") ||
-      texto.includes("poo") ||
-      texto.includes("logico")
-    ) {
-      return "Un paradigma es una manera de organizar y resolver un problema al programar. Por ejemplo, el paradigma imperativo indica los pasos que hay que realizar; el funcional prioriza funciones e inmutabilidad; y la programación orientada a objetos organiza el sistema en objetos con datos y comportamiento.";
-    }
+    const datos = await respuesta.json();
+    const texto =
+      datos?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "No pude generar una respuesta en este momento.";
 
-    if (
-      texto.includes("lenguaje") ||
-      texto.includes("python") ||
-      texto.includes("javascript") ||
-      texto.includes("java") ||
-      texto.includes("sql") ||
-      texto.includes("rust") ||
-      texto.includes("golang")
-    ) {
-      return "No existe un único lenguaje que sea el mejor para todos los proyectos. Python se usa, entre otros campos, en ciencia de datos y automatización; JavaScript en desarrollo web; Java y C# en sistemas empresariales; y SQL para consultar bases de datos. La elección depende del problema y del equipo.";
-    }
-
-    if (
-      texto.includes("git") ||
-      texto.includes("commit") ||
-      texto.includes("rama") ||
-      texto.includes("branch") ||
-      texto.includes("merge") ||
-      texto.includes("push") ||
-      texto.includes("pull") ||
-      texto.includes("repositorio")
-    ) {
-      return "Git es un sistema de control de versiones que registra los cambios de un proyecto. Un commit guarda un conjunto de cambios; una rama permite trabajar en paralelo; merge integra ramas; push envía cambios al repositorio remoto y pull trae cambios desde él. Git es la herramienta; GitHub es una plataforma para alojar repositorios y colaborar.";
-    }
-
-    return "No reconozco esa consulta todavía. Puedes preguntarme sobre arquitectura de software, lenguajes y paradigmas de programación, o Git.";
+    return texto.trim();
   }
 
   function agregarMensaje(texto, tipo) {
     const mensaje = document.createElement("div");
-    mensaje.className = "bot-message " +
-      (tipo === "usuario" ? "bot-user" : "bot-reply");
+    mensaje.className =
+      "bot-message " + (tipo === "usuario" ? "bot-user" : "bot-reply");
     mensaje.textContent = texto;
     botMessages.appendChild(mensaje);
     botMessages.scrollTop = botMessages.scrollHeight;
+    return mensaje;
   }
 
-  function enviarPregunta(pregunta) {
+  async function enviarPregunta(pregunta) {
     const texto = pregunta.trim();
-
     if (!texto) return;
 
     agregarMensaje(texto, "usuario");
-    agregarMensaje(obtenerRespuesta(texto), "bot");
+    const burbujaEspera = agregarMensaje("Pensando...", "bot");
+
+    try {
+      const respuestaIA = await obtenerRespuestaIA(texto);
+      burbujaEspera.textContent = respuestaIA;
+    } catch (error) {
+      burbujaEspera.textContent =
+        "No se pudo obtener respuesta de la IA. Revisa tu API key o tu conexión a internet.";
+      console.error(error);
+    }
+
+    botMessages.scrollTop = botMessages.scrollHeight;
   }
 
   botLauncher.addEventListener("click", function () {
     const abierto = botPanel.classList.toggle("bot-open");
     botLauncher.setAttribute("aria-expanded", String(abierto));
-
     if (abierto) {
       botInput.focus();
     }
