@@ -61,6 +61,166 @@ tr:nth-child(even) td{background:#fafcfe}
 footer{background:var(--azul);color:#b9d3e8;text-align:center;padding:36px 24px;font-size:14px}
 footer b{color:#fff}
 @media(max-width:620px){section.card{padding:28px 22px}.ficha div{border-right:none;border-bottom:1px solid rgba(255,255,255,.15)}}
+/* Chatbot */
+.bot-launcher {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 1000;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--azul, #0b2545);
+  box-shadow: 0 6px 20px rgba(11, 37, 69, 0.25);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bot-launcher:hover {
+  background: var(--azul2, #13315c);
+}
+
+.bot-panel {
+  position: fixed;
+  right: 22px;
+  bottom: 84px;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  width: min(370px, calc(100vw - 28px));
+  height: min(520px, calc(100dvh - 110px));
+  overflow: hidden;
+  border: 1px solid var(--borde, #e2e8f0);
+  border-radius: 16px;
+  background: var(--claro, #f5f8fc);
+  box-shadow: 0 12px 35px rgba(11, 37, 69, 0.22);
+}
+
+.bot-panel.bot-open {
+  display: flex;
+}
+
+.bot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  background: var(--azul, #0b2545);
+}
+
+.bot-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 16px;
+}
+
+.bot-header p {
+  margin: 3px 0 0;
+  color: #e4edf8;
+  font-size: 12px;
+}
+
+.bot-close {
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.bot-messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.bot-message {
+  max-width: 88%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  font-size: 14px;
+}
+
+.bot-message.bot-reply {
+  align-self: flex-start;
+  border: 1px solid var(--borde, #e2e8f0);
+  background: #fff;
+}
+
+.bot-message.bot-user {
+  align-self: flex-end;
+  color: #fff;
+  background: var(--azul2, #13315c);
+}
+
+.bot-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 0 12px 10px;
+}
+
+.bot-suggestions button {
+  padding: 7px 10px;
+  border: 1px solid var(--borde, #e2e8f0);
+  border-radius: 999px;
+  color: var(--azul, #0b2545);
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.bot-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--borde, #e2e8f0);
+  background: #fff;
+}
+
+.bot-input {
+  min-width: 0;
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--borde, #e2e8f0);
+  border-radius: 8px;
+  font: inherit;
+}
+
+.bot-send {
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--azul, #0b2545);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .bot-launcher {
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .bot-panel {
+    right: 10px;
+    bottom: 75px;
+    width: calc(100vw - 20px);
+    height: min(520px, calc(100dvh - 95px));
+  }
+}
 </style>
 </head>
 <body>
@@ -249,6 +409,175 @@ git log --oneline             <span class="c"># revisar el historial</span></pre
   <p>Curso: Introducción a las TIC · Universidad Tecnológica del Perú (UTP)</p>
   <p>Lima, 22 de septiembre de 2026</p>
 </footer>
+<section class="bot-panel" id="botPanel" aria-label="Chatbot de Desarrollo de Software">
+  <header class="bot-header">
+    <div>
+      <h2>Asistente de Desarrollo</h2>
+      <p>Pregúntame sobre los temas de esta página</p>
+    </div>
+    <button class="bot-close" id="botClose" type="button" aria-label="Cerrar chat">
+      ×
+    </button>
+  </header>
 
+  <div class="bot-messages" id="botMessages" aria-live="polite">
+    <div class="bot-message bot-reply">
+      ¡Hola! Puedo ayudarte con arquitectura de software, lenguajes y paradigmas, o Git.
+    </div>
+  </div>
+
+  <div class="bot-suggestions">
+    <button type="button" data-question="¿Qué es la arquitectura de software?">
+      Arquitectura
+    </button>
+    <button type="button" data-question="¿Qué es un paradigma de programación?">
+      Paradigmas
+    </button>
+    <button type="button" data-question="¿Qué es Git?">
+      Git
+    </button>
+  </div>
+
+  <form class="bot-form" id="botForm">
+    <input
+      class="bot-input"
+      id="botInput"
+      type="text"
+      placeholder="Escribe tu pregunta..."
+      aria-label="Escribe tu pregunta"
+      autocomplete="off"
+      required
+    >
+    <button class="bot-send" type="submit">Enviar</button>
+  </form>
+</section>
+
+<button
+  class="bot-launcher"
+  id="botLauncher"
+  type="button"
+  aria-expanded="false"
+  aria-controls="botPanel"
+>
+  💬 Consultar
+</button>
+  <script>
+  const botPanel = document.getElementById("botPanel");
+  const botLauncher = document.getElementById("botLauncher");
+  const botClose = document.getElementById("botClose");
+  const botMessages = document.getElementById("botMessages");
+  const botForm = document.getElementById("botForm");
+  const botInput = document.getElementById("botInput");
+
+  function normalizar(texto) {
+    return texto
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[¿?¡!.,;:]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function obtenerRespuesta(pregunta) {
+    const texto = normalizar(pregunta);
+
+    if (
+      texto.includes("microservicio") ||
+      texto.includes("arquitectura") ||
+      texto.includes("monolitica") ||
+      texto.includes("cliente servidor") ||
+      texto.includes("arquitectura en capas") ||
+      texto.includes("mvc")
+    ) {
+      return "La arquitectura de software define cómo se organiza un sistema, cuáles son sus componentes y cómo se comunican. Algunos estilos son el monolítico, cliente-servidor, capas, microservicios y orientado a eventos. La elección influye en la escalabilidad y el mantenimiento.";
+    }
+
+    if (
+      texto.includes("paradigma") ||
+      texto.includes("funcional") ||
+      texto.includes("imperativo") ||
+      texto.includes("declarativo") ||
+      texto.includes("orientado a objetos") ||
+      texto.includes("poo") ||
+      texto.includes("logico")
+    ) {
+      return "Un paradigma es una manera de organizar y resolver un problema al programar. Por ejemplo, el paradigma imperativo indica los pasos que hay que realizar; el funcional prioriza funciones e inmutabilidad; y la programación orientada a objetos organiza el sistema en objetos con datos y comportamiento.";
+    }
+
+    if (
+      texto.includes("lenguaje") ||
+      texto.includes("python") ||
+      texto.includes("javascript") ||
+      texto.includes("java") ||
+      texto.includes("sql") ||
+      texto.includes("rust") ||
+      texto.includes("golang")
+    ) {
+      return "No existe un único lenguaje que sea el mejor para todos los proyectos. Python se usa, entre otros campos, en ciencia de datos y automatización; JavaScript en desarrollo web; Java y C# en sistemas empresariales; y SQL para consultar bases de datos. La elección depende del problema y del equipo.";
+    }
+
+    if (
+      texto.includes("git") ||
+      texto.includes("commit") ||
+      texto.includes("rama") ||
+      texto.includes("branch") ||
+      texto.includes("merge") ||
+      texto.includes("push") ||
+      texto.includes("pull") ||
+      texto.includes("repositorio")
+    ) {
+      return "Git es un sistema de control de versiones que registra los cambios de un proyecto. Un commit guarda un conjunto de cambios; una rama permite trabajar en paralelo; merge integra ramas; push envía cambios al repositorio remoto y pull trae cambios desde él. Git es la herramienta; GitHub es una plataforma para alojar repositorios y colaborar.";
+    }
+
+    return "No reconozco esa consulta todavía. Puedes preguntarme sobre arquitectura de software, lenguajes y paradigmas de programación, o Git.";
+  }
+
+  function agregarMensaje(texto, tipo) {
+    const mensaje = document.createElement("div");
+    mensaje.className = "bot-message " +
+      (tipo === "usuario" ? "bot-user" : "bot-reply");
+    mensaje.textContent = texto;
+    botMessages.appendChild(mensaje);
+    botMessages.scrollTop = botMessages.scrollHeight;
+  }
+
+  function enviarPregunta(pregunta) {
+    const texto = pregunta.trim();
+
+    if (!texto) return;
+
+    agregarMensaje(texto, "usuario");
+    agregarMensaje(obtenerRespuesta(texto), "bot");
+  }
+
+  botLauncher.addEventListener("click", function () {
+    const abierto = botPanel.classList.toggle("bot-open");
+    botLauncher.setAttribute("aria-expanded", String(abierto));
+
+    if (abierto) {
+      botInput.focus();
+    }
+  });
+
+  botClose.addEventListener("click", function () {
+    botPanel.classList.remove("bot-open");
+    botLauncher.setAttribute("aria-expanded", "false");
+    botLauncher.focus();
+  });
+
+  botForm.addEventListener("submit", function (evento) {
+    evento.preventDefault();
+    enviarPregunta(botInput.value);
+    botInput.value = "";
+    botInput.focus();
+  });
+
+  document.querySelectorAll(".bot-suggestions button").forEach(function (boton) {
+    boton.addEventListener("click", function () {
+      enviarPregunta(boton.dataset.question);
+    });
+  });
+</script>
 </body>
 </html>
